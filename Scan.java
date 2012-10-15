@@ -77,6 +77,7 @@ public class Scan {
             else {
                 c = getchar();
             }
+            //System.out.println("Scanner log: " + (char) c);
             if ( myisalpha((char) c) ) {
                 /* identifier. */
                 String id = buildID();
@@ -97,6 +98,10 @@ public class Scan {
                         return ccase1('(',TK.LPAREN);
                     case ')':
                         return ccase1(')',TK.RPAREN);
+                    case '[':
+						return ccase1('[',TK.LBRACKET);
+					case ']':
+						return ccase1(']',TK.RBRACKET);
                     case '*':
                         return ccase1('*',TK.TIMES);
                     case '=':
@@ -123,7 +128,7 @@ public class Scan {
                         return ccase1or2('>','=',TK.GT,TK.GE);
 
                     case ':':
-                        return ccase2(':','=',TK.ASSIGN);
+                        return ccase1or2(':','=',TK.COLON,TK.ASSIGN);
 
                     case EOF:
                         got_eof = true;
@@ -212,6 +217,7 @@ public class Scan {
             k++;
             c = getchar();
         } while( (myisalpha((char) c) && k < MAXLEN_ID) );
+        //System.out.println("log: buildID: str:" +str+" c:"+ (char) c);
         putback = true;
         if( myisalpha((char) c) && k == MAXLEN_ID ) {
             do { c = getchar(); } while(myisalpha((char) c));

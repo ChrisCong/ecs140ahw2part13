@@ -38,10 +38,12 @@ public class TK {
 
 
  public static final TK COMMA  = new TK("TK.COMMA");    // ,
-
+ public static final TK COLON  = new TK("TK.COLON");	// :
  public static final TK ASSIGN = new TK("TK.ASSIGN");   // :=
  public static final TK LPAREN = new TK("TK.LPAREN");   // (
  public static final TK RPAREN = new TK("TK.RPAREN");   // )
+ public static final TK LBRACKET = new TK("TK.LBRACKET");   // [
+ public static final TK RBRACKET = new TK("TK.RBRACKET");   // ]
  public static final TK PLUS   = new TK("TK.PLUS");     // +
  public static final TK MINUS  = new TK("TK.MINUS");    // -
  public static final TK TIMES  = new TK("TK.TIMES");    // *
@@ -62,7 +64,7 @@ public class TK {
 /////////////////////////////////////////////////////
 
  public static final TK ID     = new TK("TK.ID");       // identifier
-
+ public static final TK ARR	   = new TK("TK.ARR");      // array
  public static final TK NUM    = new TK("TK.NUM");      // number
  ////////////////////////////////////////////////////////
  public static final TK STR  = new TK("TK.STR");  // string

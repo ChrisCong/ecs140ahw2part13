@@ -54,6 +54,8 @@ public class Parser {
 
     private void program() {
         gcprint("#include <stdio.h>");
+        //array bounds checking function
+        gcprint("int boundsChecker(int size) {}");
         gcprint("main() ");
         block();
     }
@@ -93,17 +95,84 @@ public class Parser {
 
     private void var_decl_id() {
         if( is(TK.ID) ) {
-            if (symtab.add_entry(tok.string, tok.lineNumber, TK.VAR)) {
+			Token ID_Token = tok;
+			
+			scan();
+			if ( is(TK.LBRACKET)) {
+				gcprint("int ");
+				gcprintid(ID_Token.string);
+				
+				int array_size;
+				gcprint("[");
+				array_size = array_decl_bound(ID_Token);
+				gcprint("];");
+				
+				gcprint("int "+ID_Token.string+"_size="+array_size+";");
+				
+			}
+            else if (symtab.add_entry(ID_Token.string, ID_Token.lineNumber, TK.VAR)) {
                 gcprint("int ");
-                gcprintid(tok.string);
+				gcprintid(ID_Token.string);
+                
                 gcprint("="+initialValueEVariable+";");
             }
-            scan();
         }
         else {
             parse_error("expected id in var declaration, got " + tok);
         }
     }
+
+	private int array_decl_bound(Token token) {
+		scan();
+		boolean negative_flag = false;
+		int lower_bound, upper_bound, array_size;
+		
+		if ( is(TK.RBRACKET)) {
+			System.err.println("No bounds given for array\n");
+			System.exit(1);
+		}
+		
+		//get lower bound
+		if ( is(TK.MINUS)) {
+			negative_flag = true;
+			scan();
+		}
+		
+		Token lower_bound_token = tok;
+		mustbe(TK.NUM);
+		lower_bound = Integer.parseInt(lower_bound_token.string);
+		if (negative_flag) {
+			lower_bound -= 2 * lower_bound;
+			negative_flag = false;
+		}
+		
+		//get upper bound
+		mustbe(TK.COLON);
+		if ( is(TK.MINUS)) {
+			negative_flag = true;
+			scan();
+		}
+		
+		Token upper_bound_token = tok;
+		mustbe(TK.NUM);
+		upper_bound = Integer.parseInt(upper_bound_token.string);
+		if (negative_flag) {
+			upper_bound -= 2 * upper_bound;
+			negative_flag = false;
+		}
+		
+		array_size = upper_bound - lower_bound + 1;
+		if (array_size <= 0) {
+			System.err.println("declared size of " + token.string + " is <= 0 (" + array_size + ") on line " + token.lineNumber);
+			System.exit(1);
+		}
+		
+		mustbe(TK.RBRACKET);
+		if (symtab.add_entry(token.string, tok.lineNumber, TK.ARR))
+			gcprint(" "+array_size);
+		
+		return array_size;
+	}
 
     private void const_decl() {
         mustbe(TK.CONST);
@@ -151,17 +220,21 @@ public class Parser {
     }
 
     private void assignment(){
-        if( is(TK.ID) ) {
+		Token id_token = tok;
+        if( is(TK.ID) )
             lvalue_id(tok.string, tok.lineNumber);
-            scan();
-        }
-        else {
+        else
             parse_error("missing id on left-hand-side of assignment");
-        }
-        mustbe(TK.ASSIGN);
-        gcprint("=");
-        expression();
-        gcprint(";");
+        
+        if (isArray("missing subscript for array "+id_token.string+" on line "+id_token.lineNumber, "subscripting non-array "+id_token.string+" on line "+id_token.lineNumber)) {
+			;
+		}
+        else {
+			mustbe(TK.ASSIGN);
+			gcprint("=");
+			expression();
+			gcprint(";");
+		}
     }
 
     private void print(){
@@ -174,6 +247,7 @@ public class Parser {
         }
         else {
         	gcprint("printf(\"%d\\n\", ");
+        	System.out.println("here");
         	expression();
         }
         gcprint(");");
@@ -226,15 +300,36 @@ public class Parser {
         mustbe(TK.FOR);
         gcprint("for(");
         String id = tok.string;
+        Token id_token = tok;
         Entry iv = null; // index variable in symtab
         if( is(TK.ID) ) {
             iv = lvalue_id(tok.string, tok.lineNumber);
+            
+            
+            //rvalue_id(tok.string, tok.lineNumber);
+            
+			/*Entry e = symtab.search(tok.string);
+            if ( e.isArr()) {
+				scan();
+				if (is(TK.LBRACKET)) scan();
+				else {
+					System.err.println("array on left-hand-side of assignment (used as index variable) "+id_token.string+" on line "+id_token.lineNumber);
+					System.exit(1);
+				}
+			}
+            else scan();
+            */
+            
             iv.setIsIV(true); // mark Entry as IV
-            scan();
+            //scan();
         }
         else {
             parse_error("missing id on left-hand-side of assignment in for");
         }
+        
+       if ( isArray("array on left-hand-side of assignment (used as index variable) "+id_token.string+" on line "+id_token.lineNumber, "subscripting non-array "+id_token.string+" on line "+id_token.lineNumber)) {
+			;
+		}
         mustbe(TK.ASSIGN);
         gcprint("=");
         expression();
@@ -301,8 +396,13 @@ public class Parser {
             gcprint(")");
         }
         else if( is(TK.ID) ) {
+			Token id_token = tok;
             rvalue_id(tok.string, tok.lineNumber);
-            scan();
+            
+            if (isArray("missing subscript for array "+id_token.string+" on line "+id_token.lineNumber, "subscripting non-array "+id_token.string+" on line "+id_token.lineNumber)) {
+				//empty
+				;
+			}
         }
         else if( is(TK.NUM) ) {
             gcprint(tok.string);
@@ -315,6 +415,30 @@ public class Parser {
         else
             parse_error("factor");
     }
+    
+    private boolean isArray(String error_missing_brackets, String error_extra_brackets) {
+		Token id_token = tok;
+		Entry e = symtab.search(tok.string);
+		//is array, but checks if missing bracket
+        if ( e.isArr()) {
+			scan();
+			if (is(TK.LBRACKET)) scan();
+			else {
+				System.err.println(error_missing_brackets);
+				System.exit(1);
+			}
+			return true;
+		}
+		//not array, but checks if it has erroneous brackets
+        else {
+			scan();
+			if (is(TK.LBRACKET)) {
+				System.err.println(error_extra_brackets);
+				System.exit(1);
+			}
+			return false;
+		}
+	}
 
     private Entry lvalue_id(String id, int lno) {
         Entry e = symtab.search(id);
@@ -323,7 +447,7 @@ public class Parser {
                                + lno);
             System.exit(1);
         }
-        if( !e.isVar()) {
+        if( !e.isVar() && !e.isArr()) {
             System.err.println("constant on left-hand-side of assignment "+ id + " on line "
                                + lno);
             System.exit(1);

@@ -23,6 +23,9 @@ class Entry {
     boolean isVar() {
         return (varOrConst == TK.VAR);
     }
+    boolean isArr() {
+		return (varOrConst == TK.ARR);
+	}
     boolean isConst() {
         return (varOrConst == TK.CONST);
     }
