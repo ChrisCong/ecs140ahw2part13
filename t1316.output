@@ -1,0 +1,10 @@
+running e2c t1316
+variable a is redeclared on line 5
+compiling the C generated code
+t1316.c: In function ‘main’:
+t1316.c:12:1: error: conflicting types for ‘x_a’
+t1316.c:6:1: note: previous definition of ‘x_a’ was here
+t1316.c:12:1: error: array size missing in ‘x_a’
+t1316.c:17:1: error: incompatible types when assigning to type ‘int[1]’ from type ‘int’
+t1316.c:33:1: error: incompatible types when assigning to type ‘int[1]’ from type ‘int *’
+t1316.c:41:1: warning: format ‘%d’ expects argument of type ‘int’, but argument 2 has type ‘int *’ [-Wformat]

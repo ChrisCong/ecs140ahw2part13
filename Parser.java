@@ -247,7 +247,6 @@ public class Parser {
         }
         else {
         	gcprint("printf(\"%d\\n\", ");
-        	System.out.println("here");
         	expression();
         }
         gcprint(");");

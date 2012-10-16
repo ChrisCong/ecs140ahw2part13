@@ -1,0 +1,9 @@
+running e2c t1313
+OOPS Entry whatAreYou() a is redeclared on line 3
+compiling the C generated code
+t1313.c: In function ‘main’:
+t1313.c:12:1: error: redeclaration of ‘x_a’ with no linkage
+t1313.c:6:1: note: previous declaration of ‘x_a’ was here
+t1313.c:12:1: error: array size missing in ‘x_a’
+t1313.c:15:5: error: redefinition of ‘a_size’
+t1313.c:10:5: note: previous definition of ‘a_size’ was here
