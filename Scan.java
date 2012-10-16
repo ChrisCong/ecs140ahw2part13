@@ -261,11 +261,8 @@ public class Scan {
 		str += '"';
 		//System.out.println("Log: buildSTR: finished building str, ended c: " + (char)c);
 		if (c != '"') {
-			//System.err.println("log: "+err.charAt(err.length()));
-			//System.err.println("log: "+err.charAt(err.length()-1));
-			//int length = err.length();
-			//err.charAt(length-1) = ' ';
-			System.err.println("scan: string missing closing \"; quitting near "+err.substring(0, err.length()-1));
+			if (str.length() == 2) System.err.println("scan: string missing closing \"; quitting near "+err.substring(0, err.length()-1));
+			else System.err.print("scan: string missing closing \"; quitting near "+err.substring(0, err.length()-1));
 			//System.err.println("Log: buildSTR: err: " + err.substring(0, err.length()-1));
 			System.exit(1);
 		} 
