@@ -42,8 +42,24 @@ public class Symtab {
                                 myline);
              return false;
      }
-
+     
      Entry p = new Entry(myid, myline, myVarOrConst);
+     st.peek().add(p);
+     return true;
+ }
+ 
+  // add var or const entry to current block
+ public boolean add_entry(String myid, int myline, TK myVarOrConst, int lowerBound, int upperBound) {
+     Entry e = search_this_block(myid);
+     if (e != null) {
+         System.err.println(e.whatAreYou() +
+                                " " + myid +
+                                " is redeclared on line "+
+                                myline);
+             return false;
+     }
+     
+     Entry p = new Entry(myid, myline, myVarOrConst, lowerBound, upperBound);
      st.peek().add(p);
      return true;
  }

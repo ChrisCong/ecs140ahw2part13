@@ -4,7 +4,7 @@ import java.util.*;
 
 class Entry {
     private String name;        // name of symbol.
-    private int lineNumber;     // line on which declared
+    private int lineNumber, lowerBound, upperBound;     // line on which declared
     private TK varOrConst;      // variable or const?
     private boolean isIV ;      // is presently index variable?
 
@@ -14,12 +14,26 @@ class Entry {
         this.varOrConst = varOrConst;
         this.isIV = false;
     }
+    public Entry(String name, int lineNumber, TK varOrConst, int lowerBound, int upperBound) {
+		this.name = name;
+		this.lineNumber = lineNumber;
+		this.varOrConst = varOrConst;
+		this.isIV = false;
+		this.lowerBound = lowerBound;
+		this.upperBound = upperBound;
+	}
     String getName() {
         return name;
     }
     int getLineNumber() {
         return lineNumber;
     }
+    int getLowerBound() {
+		return lowerBound;
+	}
+	int getUpperBound() {
+		return upperBound;
+	}
     boolean isVar() {
         return (varOrConst == TK.VAR);
     }
@@ -38,6 +52,7 @@ class Entry {
     public String whatAreYou() {
         return  isVar()?"variable"
                :isConst()?"constant"
+               :isArr()?"array"
                :"OOPS Entry whatAreYou()";
     }
     public String toString() {

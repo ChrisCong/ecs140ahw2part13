@@ -1,9 +1,11 @@
 //package program.e2c;
+import java.util.*;
 
 public class Parser {
 
     // need a symbol table
     private Symtab symtab = new Symtab();
+    private Stack<String> C_Program = new Stack<String>();
 
     // the first sets.
     // note: we cheat sometimes:
@@ -37,6 +39,9 @@ public class Parser {
         program();
         if( tok.kind != TK.EOF )
             parse_error("junk after logical end of program");
+        for (int i = 0; i < C_Program.size(); i++) {
+			System.out.println(C_Program.elementAt(i));
+		}
     }
 
     // for code generation
@@ -44,12 +49,14 @@ public class Parser {
 
     // print something in the generated code
     private void gcprint(String str) {
-        System.out.println(str);
+		C_Program.push(str);
+        //System.out.println(str);
     }
     // print identifier in the generated code
     // it prefixes x_ in case id conflicts with C keyword.
     private void gcprintid(String str) {
-        System.out.println("x_"+str);
+		C_Program.push("x_"+str);
+        //System.out.println("x_"+str);
     }
 
     private void program() {
@@ -99,16 +106,7 @@ public class Parser {
 			
 			scan();
 			if ( is(TK.LBRACKET)) {
-				gcprint("int ");
-				gcprintid(ID_Token.string);
-				
-				int array_size;
-				gcprint("[");
-				array_size = array_decl_bound(ID_Token);
-				gcprint("];");
-				
-				gcprint("int "+ID_Token.string+"_size="+array_size+";");
-				
+				array_decl_bound(ID_Token);
 			}
             else if (symtab.add_entry(ID_Token.string, ID_Token.lineNumber, TK.VAR)) {
                 gcprint("int ");
@@ -122,7 +120,7 @@ public class Parser {
         }
     }
 
-	private int array_decl_bound(Token token) {
+	private void array_decl_bound(Token token) {
 		scan();
 		boolean negative_flag = false;
 		int lower_bound, upper_bound, array_size;
@@ -168,10 +166,15 @@ public class Parser {
 		}
 		
 		mustbe(TK.RBRACKET);
-		if (symtab.add_entry(token.string, tok.lineNumber, TK.ARR))
+		if (symtab.add_entry(token.string, token.lineNumber, TK.ARR, lower_bound, upper_bound)) {
+			gcprint("int ");
+			gcprintid(token.string);
+			gcprint("[");
 			gcprint(" "+array_size);
-		
-		return array_size;
+			gcprint("];");
+			gcprint("int x_"+token.string+"_size="+array_size+", i = 0;");
+			gcprint("for (i; i < x_"+token.string+"_size; i++) x_"+token.string+"[i]=4444;");
+		}
 	}
 
     private void const_decl() {
@@ -395,13 +398,7 @@ public class Parser {
             gcprint(")");
         }
         else if( is(TK.ID) ) {
-			Token id_token = tok;
             rvalue_id(tok.string, tok.lineNumber);
-            
-            if (isArray("missing subscript for array "+id_token.string+" on line "+id_token.lineNumber, "subscripting non-array "+id_token.string+" on line "+id_token.lineNumber)) {
-				//empty
-				;
-			}
         }
         else if( is(TK.NUM) ) {
             gcprint(tok.string);
@@ -418,6 +415,12 @@ public class Parser {
     private boolean isArray(String error_missing_brackets, String error_extra_brackets) {
 		Token id_token = tok;
 		Entry e = symtab.search(tok.string);
+		//undeclared variable
+		if( e == null) {
+            System.err.println("undeclared variable "+ id_token.string + " on line "
+                               + id_token.lineNumber);
+            System.exit(1);
+        }
 		//is array, but checks if missing bracket
         if ( e.isArr()) {
 			scan();
@@ -461,16 +464,41 @@ public class Parser {
     }
 
     private void rvalue_id(String id, int lno) {
-        Entry e = symtab.search(id);
+        /*Entry e = symtab.search(id);
         if( e == null) {
             System.err.println("undeclared variable "+ id + " on line "
                                + lno);
             System.exit(1);
-        }
-        gcprintid(id);
+        }*/
+        if (isArray("missing subscript for array "+id+" on line "+lno, "subscripting non-array "+id+" on line "+lno)) {
+			Entry e = symtab.search(id);
+			gcprintid(id+"[");
+			expression();
+			gcprint(" - " + e.getLowerBound() + "]");
+			scan();
+		}
+		else gcprintid(id);
     }
-
-
+    /*part13
+     * add in for loop functionality
+     * /
+    /* part 14
+     * 1) in C program, declare array lower and upper bound (in E format) and linenumber after array declaration
+     * 2) write boundscheck function
+     * 3) push and pop boundscheck where appropriate
+     * 
+     * E code
+     * var a[1:3]
+     * print a[4]
+     * 
+     * C code
+     * int a[3];
+     * //want to make it to this
+     * printf(""); if(boundsChecker(a, a_size)) printf("%d\n", a[3]);
+     * //need to figure out how to make it print printf("") first
+     * //then if an array is detected in rvalue_id, if array is valid, print out if(boundsChecker)...
+     * //do the same for assignment
+	*/
     // is current token what we want?
     private boolean is(TK tk) {
         return tk == tok.kind;
