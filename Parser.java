@@ -68,7 +68,7 @@ public class Parser {
     }
 
     private void block() {
-        gcprint("{");
+        gcprint("{ int i;");
         symtab.begin_st_block();
         while( first(f_declaration) ) {
             declaration();
@@ -172,8 +172,8 @@ public class Parser {
 			gcprint("[");
 			gcprint(" "+array_size);
 			gcprint("];");
-			gcprint("int x_"+token.string+"_size="+array_size+", i = 0;");
-			gcprint("for (i; i < x_"+token.string+"_size; i++) x_"+token.string+"[i]=4444;");
+			gcprint("int x_"+token.string+"_size="+array_size+";");
+			gcprint("for (i = 0; i < x_"+token.string+"_size; i++) x_"+token.string+"[i]=4444;");
 		}
 	}
 
@@ -224,20 +224,24 @@ public class Parser {
 
     private void assignment(){
 		Token id_token = tok;
-        if( is(TK.ID) )
-            lvalue_id(tok.string, tok.lineNumber);
+        if( is(TK.ID) ) {
+			if (isArray("missing subscript for array "+id_token.string+" on line "+id_token.lineNumber, "subscripting non-array "+id_token.string+" on line "+id_token.lineNumber)) {
+				Entry e = symtab.search(id_token.string);
+				gcprintid(id_token.string+"[");
+				expression();
+				gcprint(" - " + e.getLowerBound() + "]");
+				scan();
+			} else {
+				lvalue_id(id_token.string, id_token.lineNumber);
+			}
+		}
         else
             parse_error("missing id on left-hand-side of assignment");
-        
-        if (isArray("missing subscript for array "+id_token.string+" on line "+id_token.lineNumber, "subscripting non-array "+id_token.string+" on line "+id_token.lineNumber)) {
-			;
-		}
-        else {
-			mustbe(TK.ASSIGN);
-			gcprint("=");
-			expression();
-			gcprint(";");
-		}
+
+		mustbe(TK.ASSIGN);
+		gcprint("=");
+		expression();
+		gcprint(";");
     }
 
     private void print(){

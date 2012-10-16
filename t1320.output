@@ -1,2 +1,15 @@
 running e2c t1320
-can't parse: line 3 junk after logical end of program
+compiling the C generated code
+executing the a.out
+-111111
+-4
+-1
+-5
+-2
+-3
+-111111
+-444
+-111
+-555
+-222
+-333
